@@ -1,0 +1,660 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Copy, Check, Layout, Linkedin, Dribbble, PenTool, Hash, Zap, Sparkles, Upload, Loader2, Image as ImageIcon, History, Clock, ChevronRight, Trash2, Wand2, UserCheck } from 'lucide-react';
+
+export default function DesignCopyGenerator() {
+  const [inputs, setInputs] = useState({
+    projectName: '',
+    industry: 'SaaS',
+    projectType: 'Dashboard',
+    visualStyle: 'Minimal',
+    primaryColor: 'Electric Blue',
+    tools: 'Figma',
+    keyFeature: 'Real-time analytics',
+    problemSolved: 'Reducing cognitive load',
+    tone: 'Professional',
+    creativeTitle: '' // Stores unique AI-generated title
+  });
+
+  const [activeTab, setActiveTab] = useState('dribbble');
+  const [copied, setCopied] = useState('');
+  const [generated, setGenerated] = useState(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [isHumanizing, setIsHumanizing] = useState(null); // Stores the key of the field currently being humanized
+  const [history, setHistory] = useState([]);
+  const [viewMode, setViewMode] = useState('form');
+  const fileInputRef = useRef(null);
+
+  const handleInputChange = (e) => {
+    setInputs({ ...inputs, [e.target.name]: e.target.value });
+  };
+
+  // Helper to strip markdown symbols
+  const cleanText = (text) => {
+    if (!text) return '';
+    return text.replace(/\*\*/g, '').replace(/__/g, '');
+  };
+
+  // Standard Template Generation (Enhanced for Uniqueness)
+  const generateContent = (data = inputs) => {
+    const { projectName, industry, projectType, visualStyle, primaryColor, tools, keyFeature, problemSolved, creativeTitle } = data;
+    const name = projectName || 'Untitled';
+
+    // Helper: Handle tools being an array (from AI) or string (from Input)
+    const toolsArray = Array.isArray(tools) 
+      ? tools 
+      : (typeof tools === 'string' ? tools.split(',').map(t => t.trim()) : []);
+      
+    const toolsString = Array.isArray(tools) 
+      ? tools.join(', ') 
+      : (tools || '');
+
+    // 1. Title Generation Logic
+    let title = '';
+    
+    if (creativeTitle && Math.random() > 0.5) {
+      title = creativeTitle;
+    } else {
+      const powerWords = ["Ecosystem", "Architecture", "Hub", "Engine", "Interface", "Experience", "OS", "Platform", "Matrix"];
+      const adjectives = ["Future-Ready", "Seamless", "Intuitive", "Hyper-Visual", "Autonomous", "Kinetic", "Modular"];
+      const verbs = ["Reimagined", "Redefined", "Evolved", "Simplified", "Amplified"];
+
+      const power = powerWords[Math.floor(Math.random() * powerWords.length)];
+      const adj = adjectives[Math.floor(Math.random() * adjectives.length)];
+      const verb = verbs[Math.floor(Math.random() * verbs.length)];
+
+      const titleTemplates = [
+        `${name}: The ${adj} ${industry} ${power}`,
+        `${industry} ${verb}: Introducing ${name}`,
+        `${name} — A ${visualStyle} ${projectType} Manifesto`,
+        `Beyond ${projectType}s: The ${name} ${power}`,
+        `${name} // ${visualStyle} Data Intelligence`,
+        `${name}: Engineering the Future of ${industry}`,
+        `${adj}. ${visualStyle}. ${name}.`
+      ];
+
+      title = titleTemplates[Math.floor(Math.random() * titleTemplates.length)];
+    }
+
+    // Hook
+    const hook = `Redefining the ${industry.toLowerCase()} landscape by fusing ${visualStyle.toLowerCase()} aesthetics with ${keyFeature.toLowerCase()}.`;
+
+    // Base Description
+    const description = `This project explores a ${visualStyle.toLowerCase()} approach to ${industry} interfaces. The core challenge was ${problemSolved.toLowerCase()}, which often creates friction in traditional ${projectType}s. \n\nBy utilizing a ${primaryColor}-based palette and ${visualStyle.toLowerCase()} typography, the layout prioritizes content hierarchy. The design system ensures scalability while maintaining a distinct identity suitable for modern web standards.`;
+
+    // Tags
+    const baseTags = [
+      "UI/UX", "Product Design", "User Interface", "User Experience", "Web Design", "App Design", 
+      "Design Inspiration", "Daily UI", "Creative Direction", "Digital Product", "Interaction Design", "Visual Design"
+    ];
+    
+    const dynamicTags = [industry, projectType, ...toolsArray];
+    const allTags = [...new Set([...dynamicTags, ...baseTags])];
+    const tags = allTags.join(', ');
+
+    // Platforms - REMOVED ** symbols for HTML view compatibility
+    const dribbble = `
+${title}
+
+${hook}
+
+Concept:
+${description}
+
+Tools: ${toolsString}
+
+Let me know your thoughts in the comments! 
+Press 'L' if you enjoy this clean aesthetic.
+    `;
+
+    const behance = `
+Project Title: ${title}
+Role: UI/UX Designer & Art Director
+Industry: ${industry}
+
+01. The Challenge
+In the crowded space of ${industry} applications, users often struggle with ${problemSolved}. The objective was to strip away the noise and focus purely on actionable data.
+
+02. The Solution
+${description}
+We implemented a modular grid system to ensure responsiveness, integrating ${keyFeature} to empower users with immediate insights.
+
+03. Visual Language
+Typography: Modern Sans-Serif for readability.
+Palette: Monochromatic ${primaryColor} with high-contrast accents.
+Interaction: Micro-interactions were added to validate user actions.
+
+Tools Used:
+${toolsString}
+
+Thanks for watching!
+If you are looking to elevate your digital product, let's collaborate.
+    `;
+
+    const linkedin = `
+Excited to share my latest exploration in ${industry} Product Design: ${title}.
+
+🚀 The Mission:
+Designing for ${industry} requires a delicate balance between density and clarity. With this ${projectType}, the goal was to solve "${problemSolved}" without compromising on visual elegance.
+
+💡 Key UX Focus:
+We focused heavily on ${keyFeature}. By refining the information architecture and adopting a ${visualStyle} UI style, we significantly reduced the time-to-value for the end user.
+
+🎨 Design Details:
+Built using ${toolsString}, prioritizing accessibility and component reusability.
+
+I'd love to hear your perspective on this layout. How do you handle data density in your designs?
+
+👇 Drop a comment below!
+
+Tags:
+${tags}
+    `;
+
+    const newGenerated = {
+      title,
+      dribbble: dribbble.trim(),
+      behance: behance.trim(),
+      linkedin: linkedin.trim(),
+      tags
+    };
+
+    setGenerated(newGenerated);
+    addToHistory(data, newGenerated, 'Standard');
+  };
+
+  // AI Generation (Gemini)
+  const generateAIContent = async () => {
+    setIsGeneratingAI(true);
+    const apiKey = ""; // Runtime provides this
+
+    try {
+      const prompt = `
+        You are an elite Senior Creative Copywriter.
+        Generate structured content for a design project with these details:
+        - Project: ${inputs.projectName}
+        - Industry: ${inputs.industry}
+        - Type: ${inputs.projectType}
+        - Style: ${inputs.visualStyle}
+        - Tone: ${inputs.tone}
+
+        RETURN ONLY VALID JSON (no markdown) with these keys:
+        {
+          "title": "A unique, catchy, SEO-optimized headline. Do NOT use markdown bolding (asterisks).",
+          "dribbble": "Short, punchy description (max 80 words). Do NOT use markdown bolding.",
+          "behance": "Detailed case study intro. Do NOT use markdown bolding.",
+          "linkedin": "Engaging professional post with emojis. Do NOT use markdown bolding.",
+          "tags": "15 comma-separated hashtags"
+        }
+      `;
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      });
+
+      const data = await response.json();
+      let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+      
+      const aiContent = JSON.parse(text);
+
+      // Clean AI content just in case
+      const cleanedContent = {
+        title: cleanText(aiContent.title),
+        dribbble: cleanText(aiContent.dribbble),
+        behance: cleanText(aiContent.behance),
+        linkedin: cleanText(aiContent.linkedin),
+        tags: cleanText(aiContent.tags)
+      };
+
+      setGenerated(cleanedContent);
+      addToHistory(inputs, cleanedContent, 'AI Generated');
+
+    } catch (error) {
+      console.error("AI Generation failed", error);
+      // Fallback to standard generation
+      generateContent();
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
+
+  const humanizeText = async (contentType) => {
+    if (!generated || !generated[contentType]) return;
+    
+    setIsHumanizing(contentType);
+    const originalText = generated[contentType];
+    const apiKey = ""; // Runtime provides this
+
+    try {
+        const prompt = `Rewrite the following text to make it sound 100% human-written, natural, and varied. 
+        Avoid repetitive sentence structures and robotic tones. 
+        Make it feel like a professional designer talking passionately about their work.
+        CRITICAL: Do NOT use markdown formatting like **bold** or *italics*. Return plain text only.
+        
+        Text to Humanize:
+        "${originalText}"`;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                contents: [{ parts: [{ text: prompt }] }]
+            })
+        });
+
+        const data = await response.json();
+        let newText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (newText) {
+            newText = cleanText(newText);
+            setGenerated(prev => ({ ...prev, [contentType]: newText }));
+        }
+    } catch (error) {
+        console.error("Humanize failed", error);
+    } finally {
+        setIsHumanizing(null);
+    }
+  };
+
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setIsAnalyzing(true);
+    setInputs(prev => ({ ...prev, projectName: 'Analyzing...' }));
+
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      const base64Data = reader.result.split(',')[1];
+      const mimeType = file.type;
+      const apiKey = ""; 
+
+      try {
+        const prompt = `Analyze this UI design image. Return a single VALID JSON object (no markdown) with these keys:
+        - "projectName": Create a modern 1-word name (e.g. "FinStack").
+        - "creativeTitle": Generate a UNIQUE, creative headline based on the visual vibe (e.g. "FinStack: The Glassmorphic Wealth Engine").
+        - "industry": The most likely industry.
+        - "projectType": The type of screen.
+        - "visualStyle": The aesthetic style.
+        - "primaryColor": Dominant color.
+        - "tools": Guess likely tools (return as string or array).
+        - "keyFeature": Prominent feature.
+        - "problemSolved": Short user problem solved.
+        `;
+
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: prompt },
+                { inlineData: { mimeType: mimeType, data: base64Data } }
+              ]
+            }]
+          })
+        });
+
+        const data = await response.json();
+        let text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const analysis = JSON.parse(text);
+        
+        setInputs(prev => ({ ...prev, ...analysis }));
+        generateContent({ ...inputs, ...analysis });
+        setViewMode('form');
+
+      } catch (error) {
+        console.error("Analysis failed", error);
+        setInputs(prev => ({ ...prev, projectName: 'Untitled' }));
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const addToHistory = (inputsData, outputData, type) => {
+    setHistory(prev => [
+      { 
+        id: Date.now(), 
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), 
+        type: type,
+        inputs: { ...inputsData }, 
+        generated: outputData 
+      }, 
+      ...prev
+    ]);
+  };
+
+  const copyToClipboard = (text, type) => {
+    navigator.clipboard.writeText(text);
+    setCopied(type);
+    setTimeout(() => setCopied(''), 2000);
+  };
+
+  const restoreHistory = (item) => {
+    setInputs(item.inputs);
+    setGenerated(item.generated);
+    setViewMode('form');
+  };
+
+  const deleteHistoryItem = (e, id) => {
+    e.stopPropagation();
+    setHistory(prev => prev.filter(item => item.id !== id));
+  };
+
+  useEffect(() => {
+    generateContent();
+  }, []);
+
+  // UI Theme Classes
+  const theme = {
+    bg: "bg-[#09090b]",
+    sidebar: "bg-[#09090b] border-r border-white/5",
+    input: "w-full p-3 bg-white/5 border border-white/5 rounded-xl text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500/50 transition-all duration-300",
+    label: "text-xs font-medium text-zinc-400 uppercase tracking-wide ml-1",
+    card: "bg-white/5 border border-white/5 rounded-2xl p-6 backdrop-blur-sm",
+    buttonPrimary: "w-full bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 active:scale-[0.98] border border-white/10",
+    buttonSecondary: "w-full bg-white/5 hover:bg-white/10 text-zinc-300 font-medium py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 border border-white/5 active:scale-[0.98]",
+    tabBase: "flex-1 py-2.5 text-sm font-medium flex items-center justify-center gap-2 transition-all rounded-lg",
+    tabActive: "bg-white/10 text-white shadow-sm ring-1 ring-white/5",
+    tabInactive: "text-zinc-500 hover:text-zinc-300 hover:bg-white/5",
+    glassPanel: "bg-black/40 backdrop-blur-xl border border-white/5"
+  };
+
+  return (
+    <div className={`min-h-screen ${theme.bg} text-zinc-100 font-sans selection:bg-indigo-500/30 flex flex-col md:flex-row`}>
+      
+      {/* Sidebar / Inputs */}
+      <div className={`w-full md:w-[360px] ${theme.sidebar} flex flex-col h-screen`}>
+        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-black/20 backdrop-blur-md">
+          <h1 className="text-2xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent tracking-tight cursor-pointer hover:opacity-80 transition-opacity" onClick={() => setViewMode('form')}>
+            Xamcount
+          </h1>
+          <button 
+            onClick={() => setViewMode(viewMode === 'form' ? 'history' : 'form')}
+            className={`p-2.5 rounded-xl transition-all ${viewMode === 'history' ? 'bg-indigo-500/20 text-indigo-400 ring-1 ring-indigo-500/30' : 'text-zinc-500 hover:text-zinc-300 hover:bg-white/5'}`}
+            title={viewMode === 'form' ? "View History" : "Back to Edit"}
+          >
+            {viewMode === 'form' ? <History className="w-5 h-5" /> : <PenTool className="w-5 h-5" />}
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          
+          {viewMode === 'form' ? (
+            <div className="p-6 space-y-6">
+              {/* Image Upload Zone */}
+              <div 
+                onClick={() => fileInputRef.current?.click()}
+                className={`group border border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all duration-300 ${isAnalyzing ? 'border-indigo-500/50 bg-indigo-500/5' : 'border-white/10 hover:border-indigo-500/30 hover:bg-white/5'}`}
+              >
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleImageUpload} 
+                />
+                {isAnalyzing ? (
+                  <div className="py-2 space-y-3">
+                    <Loader2 className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
+                    <p className="text-xs font-semibold text-indigo-300 tracking-wide">Analyzing Visuals...</p>
+                  </div>
+                ) : (
+                  <div className="py-1 space-y-3">
+                    <div className="bg-white/5 p-3 rounded-full inline-flex text-zinc-400 group-hover:text-indigo-400 group-hover:scale-110 transition-all duration-300 ring-1 ring-white/10">
+                      <Upload className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-zinc-200 group-hover:text-white">Upload Project Image</p>
+                      <p className="text-[10px] text-zinc-500 mt-1 uppercase tracking-wider group-hover:text-zinc-400">AI auto-detects style</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="relative py-2">
+                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                  <div className="w-full border-t border-white/5"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="bg-[#09090b] px-3 text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Or Edit Manually</span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={theme.label}>Project Name</label>
+                <input type="text" name="projectName" value={inputs.projectName} placeholder="e.g. FinFlow" onChange={handleInputChange} className={theme.input} />
+              </div>
+
+              <div className="grid grid-cols-1 gap-6">
+                <div className="space-y-1.5">
+                  <label className={theme.label}>Industry</label>
+                  <div className="relative">
+                    <select name="industry" value={inputs.industry} onChange={handleInputChange} className={`${theme.input} appearance-none cursor-pointer`}>
+                      <option value="SaaS">SaaS</option>
+                      <option value="Fintech">Fintech</option>
+                      <option value="Healthcare">Healthcare</option>
+                      <option value="E-Commerce">E-Commerce</option>
+                      <option value="Crypto/Web3">Crypto/Web3</option>
+                      <option value="Gaming">Gaming</option>
+                      <option value="AI & ML">AI & ML</option>
+                      <option value="Real Estate">Real Estate</option>
+                    </select>
+                    <ChevronRight className="w-4 h-4 text-zinc-500 absolute right-3 top-3.5 rotate-90 pointer-events-none" />
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <label className={theme.label}>Tone</label>
+                  <div className="relative">
+                    <select name="tone" value={inputs.tone} onChange={handleInputChange} className={`${theme.input} appearance-none cursor-pointer`}>
+                      <option value="Professional">Professional</option>
+                      <option value="Witty & Fun">Witty & Fun</option>
+                      <option value="Minimalist">Minimalist</option>
+                      <option value="Storyteller">Storyteller</option>
+                      <option value="Brutalist">Brutalist</option>
+                    </select>
+                    <ChevronRight className="w-4 h-4 text-zinc-500 absolute right-3 top-3.5 rotate-90 pointer-events-none" />
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={theme.label}>Visual Style</label>
+                <input type="text" name="visualStyle" value={inputs.visualStyle} placeholder="e.g. Minimal" onChange={handleInputChange} className={theme.input} />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={theme.label}>Problem Solved</label>
+                <textarea name="problemSolved" value={inputs.problemSolved} rows={2} placeholder="User pain point..." onChange={handleInputChange} className={`${theme.input} resize-none`}></textarea>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={theme.label}>Key Feature</label>
+                <input type="text" name="keyFeature" value={inputs.keyFeature} placeholder="Innovation..." onChange={handleInputChange} className={theme.input} />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className={theme.label}>Tools</label>
+                <input type="text" name="tools" value={inputs.tools} placeholder="Tools..." onChange={handleInputChange} className={theme.input} />
+              </div>
+            </div>
+          ) : (
+            <div className="p-6 space-y-4">
+              <div className="flex items-center gap-2 mb-6">
+                <div className="bg-white/5 p-1.5 rounded-lg">
+                   <Clock className="w-4 h-4 text-zinc-400" />
+                </div>
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">Recent Activity</span>
+              </div>
+              
+              {history.length === 0 ? (
+                <div className="text-center py-20 border border-dashed border-white/5 rounded-2xl">
+                  <p className="text-sm text-zinc-500 font-medium">No history yet.</p>
+                </div>
+              ) : (
+                history.map((item) => (
+                  <div 
+                    key={item.id} 
+                    onClick={() => restoreHistory(item)}
+                    className="group bg-white/5 border border-white/5 hover:border-indigo-500/30 hover:bg-white/10 p-4 rounded-xl cursor-pointer transition-all relative overflow-hidden"
+                  >
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-sm font-bold text-zinc-200 group-hover:text-white truncate max-w-[180px] tracking-tight">
+                          {item.inputs.projectName || 'Untitled'}
+                        </h3>
+                        <p className="text-[10px] text-zinc-500 mt-1 flex items-center gap-1.5 font-medium">
+                          {item.type === 'AI Generated' && <Sparkles className="w-3 h-3 text-indigo-400" />}
+                          {item.inputs.industry}
+                        </p>
+                      </div>
+                      <span className="text-[10px] text-zinc-600 font-mono bg-black/20 px-1.5 py-0.5 rounded">
+                         {item.timestamp}
+                      </span>
+                    </div>
+                    <button 
+                        onClick={(e) => deleteHistoryItem(e, item.id)}
+                        className="absolute right-2 bottom-2 p-2 rounded-lg text-zinc-600 hover:text-red-400 hover:bg-black/40 opacity-0 group-hover:opacity-100 transition-all duration-200 scale-90 hover:scale-100"
+                        title="Delete"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
+        
+        {viewMode === 'form' && (
+          <div className="p-6 border-t border-white/5 bg-black/20 backdrop-blur-md space-y-3 z-10">
+             <button 
+                onClick={() => generateAIContent()}
+                disabled={isGeneratingAI}
+                className={theme.buttonPrimary}
+             >
+                {isGeneratingAI ? <Loader2 className="w-4 h-4 animate-spin" /> : <Wand2 className="w-4 h-4" />}
+                {isGeneratingAI ? 'Crafting Magic...' : 'Generate with AI'}
+            </button>
+             <button onClick={() => generateContent()} className={theme.buttonSecondary}>
+                <Zap className="w-4 h-4 text-zinc-400" /> Quick Template
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Main Preview Area */}
+      <div className="flex-1 bg-black/20 p-8 md:p-12 overflow-y-auto relative">
+        {/* Ambient Glow */}
+        <div className="absolute top-0 left-0 w-full h-96 bg-indigo-600/5 blur-[120px] pointer-events-none"></div>
+
+        {generated && (
+          <div className="max-w-5xl mx-auto space-y-8 relative z-10">
+            
+            {/* Header Result */}
+            <div className="group relative">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-1000"></div>
+                <div className="relative bg-[#09090b] rounded-2xl border border-white/10 p-8 shadow-2xl">
+                    <div className="flex justify-between items-start mb-4">
+                        <div className="flex items-center gap-2">
+                             {isGeneratingAI && <div className="bg-indigo-500/10 p-1 rounded-md"><Sparkles className="w-3.5 h-3.5 text-indigo-400" /></div>}
+                             <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest">Optimized Title</h2>
+                        </div>
+                        
+                        <div className="flex items-center gap-3">
+                           <button 
+                                onClick={() => humanizeText('title')} 
+                                disabled={isHumanizing === 'title'}
+                                className="text-zinc-500 hover:text-indigo-400 text-xs font-bold flex items-center gap-1.5 transition-colors disabled:opacity-50 hover:bg-white/5 px-2 py-1 rounded-lg"
+                            >
+                                {isHumanizing === 'title' ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
+                                {isHumanizing === 'title' ? 'Humanizing...' : 'Humanize'}
+                            </button>
+                            <div className="h-4 w-px bg-white/10"></div>
+                            <button onClick={() => copyToClipboard(generated.title, 'title')} className="text-zinc-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors hover:bg-white/5 px-2 py-1 rounded-lg">
+                                {copied === 'title' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                {copied === 'title' ? 'Copied' : 'Copy'}
+                            </button>
+                        </div>
+                    </div>
+                    <p className="text-3xl md:text-4xl font-extrabold text-white tracking-tight leading-tight selection:bg-purple-500/30">{generated.title}</p>
+                </div>
+            </div>
+
+            {/* Platform Tabs */}
+            <div className={`${theme.card} !p-0 overflow-hidden flex flex-col min-h-[600px] shadow-2xl shadow-black/50`}>
+              <div className="flex border-b border-white/5 bg-black/20 p-2 gap-2">
+                <button 
+                  onClick={() => setActiveTab('dribbble')}
+                  className={`${theme.tabBase} ${activeTab === 'dribbble' ? theme.tabActive : theme.tabInactive}`}
+                >
+                  <Dribbble className={`w-4 h-4 ${activeTab === 'dribbble' ? 'text-pink-400' : ''}`} /> Dribbble
+                </button>
+                <button 
+                  onClick={() => setActiveTab('behance')}
+                  className={`${theme.tabBase} ${activeTab === 'behance' ? theme.tabActive : theme.tabInactive}`}
+                >
+                  <Layout className={`w-4 h-4 ${activeTab === 'behance' ? 'text-blue-400' : ''}`} /> Behance
+                </button>
+                <button 
+                  onClick={() => setActiveTab('linkedin')}
+                  className={`${theme.tabBase} ${activeTab === 'linkedin' ? theme.tabActive : theme.tabInactive}`}
+                >
+                  <Linkedin className={`w-4 h-4 ${activeTab === 'linkedin' ? 'text-sky-400' : ''}`} /> LinkedIn
+                </button>
+              </div>
+
+              <div className="p-10 flex-1 relative group bg-[#0C0C0E]">
+                <div className="absolute top-6 right-6 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-[#1C1C1F] p-1 rounded-lg border border-white/5 shadow-xl transform translate-y-[-4px] group-hover:translate-y-0 duration-200">
+                    <button 
+                        onClick={() => humanizeText(activeTab)} 
+                        disabled={isHumanizing === activeTab}
+                        className="text-zinc-400 hover:text-indigo-400 text-xs font-bold px-3 py-1.5 flex items-center gap-2 transition-colors disabled:opacity-50 rounded-md hover:bg-white/5"
+                    >
+                        {isHumanizing === activeTab ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <UserCheck className="w-3.5 h-3.5" />}
+                        {isHumanizing === activeTab ? 'Refining...' : 'Humanize'}
+                    </button>
+                    <div className="h-4 w-px bg-white/10"></div>
+                     <button onClick={() => copyToClipboard(generated[activeTab], activeTab)} className="text-zinc-400 hover:text-white px-3 py-1.5 text-xs font-bold flex items-center gap-2 transition-colors rounded-md hover:bg-white/5">
+                        {copied === activeTab ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied === activeTab ? 'Copied' : 'Copy'}
+                    </button>
+                </div>
+                
+                {/* HTML View Content */}
+                <div className="whitespace-pre-line font-sans text-zinc-300 text-[15px] leading-8 tracking-wide max-w-3xl">
+                  {generated[activeTab]}
+                </div>
+              </div>
+            </div>
+
+             {/* Hashtags */}
+             <div className={theme.card}>
+                <div className="flex justify-between items-start mb-4">
+                    <h2 className="text-[11px] font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
+                        <Hash className="w-3.5 h-3.5" /> Tags
+                    </h2>
+                    <button onClick={() => copyToClipboard(generated.tags, 'tags')} className="text-zinc-500 hover:text-white text-xs font-bold flex items-center gap-1.5 transition-colors hover:bg-white/5 px-2 py-1 rounded-lg">
+                        {copied === 'tags' ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                        {copied === 'tags' ? 'Copied' : 'Copy'}
+                    </button>
+                </div>
+                <div className="p-4 bg-black/20 rounded-xl border border-white/5">
+                    <p className="text-sm text-zinc-400 font-mono leading-7 break-words">{generated.tags}</p>
+                </div>
+            </div>
+
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
